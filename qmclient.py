@@ -216,6 +216,7 @@ class QMClient(object):
 
         return (ret.in_data, ret.in_error)
 
+
     def read_excl(self, filename, rec_id, wait):
         if filename.lower() not in self.__filenos:
             raise Exception, "File is not opened"
@@ -224,6 +225,37 @@ class QMClient(object):
         ret = self._read_record(fno, rec_id, SrvrReaduw if wait else SrvrReadu)
             
         return (ret.in_data, ret.in_error)
+
+
+    def record_lock(self, filename, rec_id, update=False, wait=False):
+        if filename.lower() not in self.__filenos:
+            raise Exception, "File is not opened"
+
+        fno = self.__filenos[filename.lower()]
+        flags = (1 if update else 0) + (2 if wait else 0)
+        msg_data = pack("=hh%is"%len(rec_id), fno, flags, rec_id)
+        ret = self._message_pair(QMMessage(SrvrLockRecord, msg_data))
+
+        if ret.in_error == SV_ON_ERROR:
+            raise Exception, "Server aborted record lock: %s" % ret.in_error_text
+
+        return (True, ret.in_error)
+
+
+    def write(self, filename, rec_id, data):
+        if filename.lower() not in self.__filenos:
+            raise Exception, "File is not opened"
+
+        fno = self.__filenos[filename.lower()]
+        return self._write_record(fno, rec_id, data, SrvrWrite)
+
+
+    def write_retain(self, filename, rec_id, data):
+        if filename.lower() not in self.__filenos:
+            raise Exception, "File is not opened"
+
+        fno = self.__filenos[filename.lower()]
+        return self._write_record(fno, rec_id, data, SrvrWriteu)
 
 
     def _read_record(self, fno, rec_id, msg_type):
@@ -240,6 +272,26 @@ class QMClient(object):
             raise Exception, "Server aborted reading record: %s" % ret.in_error_text
 
         return ret
+
+    def _write_record(self, fno, rec_id, data, msg_type):
+        rec_id = rec_id if isinstance(rec_id, str) else str(rec_id)
+        if msg_type not in [SrvrWrite, SrvrWriteu]:
+            raise Exception, "Message Type is not valid for record write"
+
+        if len(rec_id) < 1 and len(rec_id) > 255:
+            raise Exception, "Record ID needs to be betwee 1 and 255 characters"
+
+        msg_data = pack("=hh%is%is"%(len(rec_id), len(data)), fno, len(rec_id), rec_id, data)
+        print len(msg_data)
+        ret = self._message_pair(QMMessage(msg_type, msg_data))
+        if ret is False:
+            raise Exception, "Error while writing to server."
+
+        if ret.in_error == SV_ON_ERROR:
+            raise Exception, "Server aborted writing record: %s" % ret.in_error_text
+
+        return (True, ret.in_error)
+
 
 
     def _get_response(self, q_msg):

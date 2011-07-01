@@ -14,7 +14,7 @@ print "Open TESTACC File"
 print client.open("TESTACC")
 print
 
-print "Read TEST record with no locks"
+print "Read TEST record with no lock"
 print client.read("TESTACC", "TEST")
 print
 
@@ -24,6 +24,13 @@ print
 
 print "Read TEST record with exclusive lock"
 print client.read_excl("TESTACC", "TEST", True)
+print
+
+print "Lock TEST2 record"
+print client.record_lock("TESTACC", "TEST2")
+
+print "Write TEST2 record"
+print client.write("TESTACC", "TEST2", "This is a test")
 print
 
 print "Close the TESTACC File"

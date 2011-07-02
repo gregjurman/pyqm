@@ -79,6 +79,48 @@ class QMMessage(object):
     in_error_text = None
 
 
+class QMRecord(object):
+    TEXT_MARK_STRING = "\xFB"
+    SUBVALUE_MARK_STRING = "\xFC"
+    VALUE_MARK_STRING = "\xFD"
+    FIELD_MARK_STRING = "\xFE"
+    ITEM_MARK_STRING = "\xFF"
+
+    def __init__(self, src_data=None):
+        if src_data is not None:
+            self.data = self.unpack(src_data)
+
+    def unpack(self, src_data):
+        fields = src_data.split(self.FIELD_MARK_STRING)
+        
+        for field in fields:
+            if self.VALUE_MARK_STRING in field:
+                field = field.split(self.VALUE_MARK_STRING)
+                for value in values:
+                    if self.SUBVALUE_MARK_STRING in value:
+                       value = value.split(self.SUBVALUE_MARK_STRING)
+
+        self.data = fields
+
+    def pack(self):
+        data_out = ''
+        if isinstance(self.data, list):
+            for field in self.data:
+                if isinstance(field, str):
+                    data_out = data_out + field + self.FIELD_MARK_STRING
+                else:
+                    for value in field:
+                        if isinstance(value, str):
+                            data_out = data_out + value + self.VALUE_MARK_STRING
+                        else:
+                            for subval in value:
+                                data_out = data_it + subval + self.SUBVALUE_MARK_STRING
+        else:
+            data_out = self.data
+
+        return data_out
+
+
 class QMClient(object):
     max_username_len = 32
     status = None
@@ -370,10 +412,13 @@ class QMClient(object):
         return ret
 
     def _write_record(self, fno, rec_id, data, msg_type):
+        if isinstance(data, QMRecord):
+            data = data.pack()
+
         rec_id = rec_id if isinstance(rec_id, str) else str(rec_id)
         if msg_type not in [SrvrWrite, SrvrWriteu]:
             raise Exception, "Message Type is not valid for record write"
-
+        
         if len(rec_id) < 1 and len(rec_id) > 255:
             raise Exception, "Record ID needs to be betwee 1 and 255 characters"
 

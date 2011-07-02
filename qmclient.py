@@ -198,6 +198,9 @@ class QMClient(object):
 
 
     def read(self, filename, rec_id):
+        '''
+            Read a record
+        '''
         if filename.lower() not in self.__filenos:
             raise Exception, "File is not opened"
 
@@ -208,6 +211,9 @@ class QMClient(object):
 
 
     def read_shared(self, filename, rec_id, wait):
+        '''
+            Read a record with a shared lock
+        '''
         if filename.lower() not in self.__filenos:
             raise Exception, "File is not opened"
 
@@ -218,6 +224,9 @@ class QMClient(object):
 
 
     def read_excl(self, filename, rec_id, wait):
+        """
+            Read a record with an exclusive lock
+        """
         if filename.lower() not in self.__filenos:
             raise Exception, "File is not opened"
     
@@ -227,6 +236,7 @@ class QMClient(object):
         return (ret.in_data, ret.in_error)
 
 
+<<<<<<< HEAD
     def record_lock(self, filename, rec_id, update=False, wait=False):
         if filename.lower() not in self.__filenos:
             raise Exception, "File is not opened"
@@ -238,10 +248,27 @@ class QMClient(object):
 
         if ret.in_error == SV_ON_ERROR:
             raise Exception, "Server aborted record lock: %s" % ret.in_error_text
+=======
+    def select(self, filename, list_id):
+        '''
+            Generates a select list containing the ids of all records in a file
+        '''
+        if filename.lower() not in self.__filenos:
+            raise Exception, "File is not opened"
+        fno = self.__filenos[filename.lower()]
+        ret = self._message_pair(QMMessage(SrvrSelect, pack("=hh", fno, list_id)))
+
+        if ret is False:
+            raise Exception, "Error while writing to server."
+
+        if ret.in_error == SV_ON_ERROR:
+            raise Exception, "Server aborted on select: %s" % ret.in_error_text
+>>>>>>> feature/select
 
         return (True, ret.in_error)
 
 
+<<<<<<< HEAD
     def write(self, filename, rec_id, data):
         if filename.lower() not in self.__filenos:
             raise Exception, "File is not opened"
@@ -256,6 +283,78 @@ class QMClient(object):
 
         fno = self.__filenos[filename.lower()]
         return self._write_record(fno, rec_id, data, SrvrWriteu)
+=======
+    def select_left(self, filename, index_name, list_id):
+        '''
+            Scan index position to the left
+        '''
+        return self._selectlr(filename, index_name, list_id, SrvrSelectLeft)
+
+
+    def select_right(self, filename, index_name, list_id):
+        '''
+            Scan index position to the right
+        '''
+        return self._selectlr(filename, index_name, list_id, SrvrSelectRight)
+
+
+    def select_index(self, filename, index_name, index_value, list_id):
+        '''
+            Generate select list from index entry
+        '''
+        if filename.lower() not in self.__filenos:
+            raise Exception, "File is not opened"
+        fno = self.__filenos[filename.lower()]
+        msg = pack("=hhh", fno, list_id, len(index_name))
+        msg = msg + pack("=%is" % len(index_name), index_name)
+        if len(index_name) % 2 == 1:
+            msg = msg + "\x00"
+        msg = msg + pack("=h%is" % len(index_value), len(index_value), index_value)
+        if len(index_name) % 2 == 1:
+            msg = msg + "\x00"
+
+        ret = self._message_pair(QMMessage(SrvrSelectIndex, msg))
+        
+        if ret is False:
+            raise Exception, "Error while writing to server."
+
+        if ret.in_error == SV_ON_ERROR:
+            raise Exception, "Server aborted on select index: %s" % ret.in_error_text
+
+        return (True, ret.in_error)
+
+
+    def clear_select(self, list_id):
+        '''
+            Clears a select list on the server
+        '''
+        ret = self._message_pair(QMMessage(SrvrClearSelect, pack("=h", list_id))
+
+        if ret is False:
+            raise Exception, "Error while writing to server."
+
+        if ret.in_error == SV_ON_ERROR:
+            raise Exception, "Server aborted clearing the select list: %s" % ret.in_error_text
+
+        return (True, ret.in_error)
+
+
+    def _selectlr(self,filename, index_name, list_id, msg_type):
+        if filename.lower() not in self.__filenos:
+            raise Exception, "File is not opened"
+        fno = self.__filenos[filename.lower()]
+        msg = pack("=hh%is"%len(index_name), fno, list_id, index_name)
+        ret = self._message_pair(QMMessage(msg_type, msg))
+
+        if ret is False:
+            raise Exception, "Error while writing to server."
+
+        if ret.in_error == SV_ON_ERROR:
+            raise Exception, "Server aborted on select left/right: %s" % ret.in_error_text
+
+        return (ret.in_data if ret.in_error == SV_OK else None, ret.in_error)
+
+>>>>>>> feature/select
 
 
     def _read_record(self, fno, rec_id, msg_type):

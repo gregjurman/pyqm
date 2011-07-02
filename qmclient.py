@@ -236,7 +236,6 @@ class QMClient(object):
         return (ret.in_data, ret.in_error)
 
 
-<<<<<<< HEAD
     def record_lock(self, filename, rec_id, update=False, wait=False):
         if filename.lower() not in self.__filenos:
             raise Exception, "File is not opened"
@@ -248,7 +247,8 @@ class QMClient(object):
 
         if ret.in_error == SV_ON_ERROR:
             raise Exception, "Server aborted record lock: %s" % ret.in_error_text
-=======
+
+
     def select(self, filename, list_id):
         '''
             Generates a select list containing the ids of all records in a file
@@ -263,12 +263,10 @@ class QMClient(object):
 
         if ret.in_error == SV_ON_ERROR:
             raise Exception, "Server aborted on select: %s" % ret.in_error_text
->>>>>>> feature/select
 
         return (True, ret.in_error)
 
 
-<<<<<<< HEAD
     def write(self, filename, rec_id, data):
         if filename.lower() not in self.__filenos:
             raise Exception, "File is not opened"
@@ -283,7 +281,8 @@ class QMClient(object):
 
         fno = self.__filenos[filename.lower()]
         return self._write_record(fno, rec_id, data, SrvrWriteu)
-=======
+
+
     def select_left(self, filename, index_name, list_id):
         '''
             Scan index position to the left
@@ -353,8 +352,6 @@ class QMClient(object):
             raise Exception, "Server aborted on select left/right: %s" % ret.in_error_text
 
         return (ret.in_data if ret.in_error == SV_OK else None, ret.in_error)
-
->>>>>>> feature/select
 
 
     def _read_record(self, fno, rec_id, msg_type):

@@ -327,7 +327,7 @@ class QMClient(object):
         '''
             Clears a select list on the server
         '''
-        ret = self._message_pair(QMMessage(SrvrClearSelect, pack("=h", list_id))
+        ret = self._message_pair(QMMessage(SrvrClearSelect, pack("=h", list_id)))
 
         if ret is False:
             raise Exception, "Error while writing to server."
@@ -378,7 +378,6 @@ class QMClient(object):
             raise Exception, "Record ID needs to be betwee 1 and 255 characters"
 
         msg_data = pack("=hh%is%is"%(len(rec_id), len(data)), fno, len(rec_id), rec_id, data)
-        print len(msg_data)
         ret = self._message_pair(QMMessage(msg_type, msg_data))
         if ret is False:
             raise Exception, "Error while writing to server."

@@ -30,7 +30,7 @@ print "Lock TEST2 record"
 print client.record_lock("TESTACC", "TEST2")
 
 print "Write TEST2 record"
-print client.write("TESTACC", "TEST2", "This is a test")
+print client.write("TESTACC", "TEST2", "This is a test from Python")
 print
 
 print "Close the TESTACC File"
